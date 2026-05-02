@@ -1,8 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import { createLink, useRouterState } from "@tanstack/react-router";
 import { Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AtStoreLogo } from "./AtStoreLogo";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NavbarAuth } from "./NavbarAuth";
 import { IconButton } from "../design-system/icon-button";
 import {
@@ -49,6 +51,7 @@ export function SiteHeader() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const { t } = useTranslation("common");
 
   return (
     <Navbar>
@@ -57,7 +60,7 @@ export function SiteHeader() {
       </NavbarLogoLink>
       <NavbarNavigation justify="right">
         <NavbarLinkLink to="/home" isActive={pathname.startsWith("/apps/")}>
-          Apps
+          {t("siteHeader.apps")}
         </NavbarLinkLink>
         <NavbarLinkLink
           to="/search"
@@ -65,19 +68,20 @@ export function SiteHeader() {
           style={styles.mobileSearchLink}
           search={{ sort: "popular" }}
         >
-          Search
+          {t("siteHeader.search")}
         </NavbarLinkLink>
       </NavbarNavigation>
       <NavbarAction style={styles.navbarAction}>
         <IconButtonLink
           to="/search"
           search={{ sort: "popular" }}
-          aria-label="Search listings"
+          aria-label={t("siteHeader.searchListingsAriaLabel")}
           variant="secondary"
           style={styles.desktopSearchLink}
         >
           <Search />
         </IconButtonLink>
+        <LanguageSwitcher />
         <NavbarAuth />
       </NavbarAction>
     </Navbar>
