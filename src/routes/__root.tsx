@@ -8,8 +8,11 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as stylex from "@stylexjs/stylex";
 
+import { I18nextProvider } from "react-i18next";
+
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import { user } from "../integrations/tanstack-query/api-user.functions";
+import { locale as localeApi } from "../integrations/tanstack-query/api-locale.functions";
 import { getGeneratedBannerRecordUrlsQueryOptions } from "../integrations/tanstack-query/api-banner-record-urls.functions";
 
 import appCss from "../styles.css?url";
@@ -18,6 +21,13 @@ import type { QueryClient } from "@tanstack/react-query";
 import { primaryColor } from "../design-system/theme/color.stylex";
 import { blue } from "../design-system/theme/colors/blue.stylex";
 import { DEFAULT_THEME_MODE } from "../lib/theme";
+import {
+  DEFAULT_LOCALE,
+  localeDirection,
+  parseLocale,
+  type Locale,
+} from "../lib/locale";
+import { initI18n } from "../i18n";
 
 const styles = stylex.create({
   body: {
@@ -82,6 +92,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         getGeneratedBannerRecordUrlsQueryOptions,
       ),
       context.queryClient.ensureQueryData(user.getThemePreferenceQueryOptions),
+      context.queryClient.ensureQueryData(
+        localeApi.getLocalePreferenceQueryOptions,
+      ),
     ]);
   },
   head: () => ({
@@ -176,15 +189,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   });
   const themeMode = themePreference?.mode ?? DEFAULT_THEME_MODE;
 
+  const { data: localePreference } = useQuery({
+    ...localeApi.getLocalePreferenceQueryOptions,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+  const currentLocale: Locale = parseLocale(
+    localePreference?.locale ?? DEFAULT_LOCALE,
+  );
+  const i18n = initI18n(currentLocale);
+
   return (
-    <html lang="en" data-theme={themeMode} suppressHydrationWarning>
+    <html
+      lang={currentLocale}
+      dir={localeDirection(currentLocale)}
+      data-theme={themeMode}
+      suppressHydrationWarning
+    >
       <head>
         <style dangerouslySetInnerHTML={{ __html: COLOR_SCHEME_CSS }} />
         <script dangerouslySetInnerHTML={{ __html: bannerInitScript }} />
         <HeadContent />
       </head>
       <body {...stylex.props(primaryColorTheme, styles.body)}>
-        {children}
+        <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",
